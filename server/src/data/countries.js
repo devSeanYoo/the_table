@@ -18,7 +18,7 @@ export const COUNTRIES = {
       usesMax: 3,
       visibility: 'public',
       needsTarget: false,
-      description: 'Press this to get +2 Water right now. At the same time, Egypt loses all its Water and Power this round.',
+      description: "Press this to get +2 Water right now. At the same time, Egypt loses this round's Water and Power production (not what it already had stored up).",
     },
   },
   EGYPT: {
