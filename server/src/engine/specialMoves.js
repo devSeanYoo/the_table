@@ -1,5 +1,6 @@
 import { COUNTRIES } from '../data/countries.js';
-import { addNews, snapshotResources } from './utils.js';
+import { addNews } from './utils.js';
+import { getBaseProduction } from './production.js';
 
 function pushMoveLog(state, entry) {
   const full = {
@@ -32,8 +33,8 @@ function nullifyWaterControl(state, entry) {
   const ethiopia = state.countries.ETHIOPIA;
   const egypt = state.countries.EGYPT;
   ethiopia.resources.water -= entry.ethiopiaGain;
-  egypt.resources.water = entry.snapshot.water;
-  egypt.resources.power = entry.snapshot.power;
+  egypt.resources.water += entry.waterLost;
+  egypt.resources.power += entry.powerLost;
 }
 
 // Fully reverses EMERGENCY_RELEASE (used by Turkmenistan's Block It — unlike Thailand's
@@ -80,19 +81,24 @@ function attemptSpecialMove(state, country, payload) {
   switch (def.id) {
     case 'WATER_CONTROL': {
       const egypt = state.countries.EGYPT;
-      const snapshot = snapshotResources(egypt);
+      // Only strips this round's Water/Power production, not Egypt's whole stockpile —
+      // can't take more than Egypt actually has, in case it was already spent/traded away.
+      const egyptProd = getBaseProduction('EGYPT', state.round, state);
+      const waterLost = Math.min(egypt.resources.water, egyptProd.water);
+      const powerLost = Math.min(egypt.resources.power, egyptProd.power);
       state.countries.ETHIOPIA.resources.water += 2;
-      egypt.resources.water = 0;
-      egypt.resources.power = 0;
+      egypt.resources.water -= waterLost;
+      egypt.resources.power -= powerLost;
       cs.specialMove.usesLeft -= 1;
       pushMoveLog(state, {
         moveId: 'WATER_CONTROL',
         country,
         targetCountry: 'EGYPT',
         ethiopiaGain: 2,
-        snapshot,
+        waterLost,
+        powerLost,
       });
-      addNews(state, 'Ethiopia used Water Control. Egypt lost all its Water and Power this round.');
+      addNews(state, "Ethiopia used Water Control. Egypt lost this round's Water and Power production.");
       return { ok: true };
     }
 

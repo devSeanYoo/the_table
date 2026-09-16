@@ -5,7 +5,3 @@ export function addNews(state, text) {
 export function addAdminLog(state, action, detail) {
   state.adminLog.push({ id: state.nextLogId++, ts: Date.now(), action, detail });
 }
-
-export function snapshotResources(cs) {
-  return { ...cs.resources };
-}

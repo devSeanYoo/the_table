@@ -99,16 +99,22 @@ test('Turkmenistan gas unlocks after receiving 3 cumulative Minerals', () => {
   assert.equal(state.countries.TURKMENISTAN.gasUnlockRound, 2);
 });
 
-test('Ethiopia Water Control hits Egypt; Egypt Stop Ethiopia reverses it', () => {
+test('Ethiopia Water Control only strips Egypt\'s this-round production, not its whole stockpile; Egypt Stop Ethiopia reverses it', () => {
   const state = freshActiveState();
+  // Give Egypt leftover stock from "previous rounds" on top of this round's production
+  // (1 water, 1 power), so wiping the whole stockpile vs. just this round's gain are
+  // actually distinguishable.
+  state.countries.EGYPT.resources.water += 5;
+  state.countries.EGYPT.resources.power += 5;
   const egyptWaterBefore = state.countries.EGYPT.resources.water;
   const egyptPowerBefore = state.countries.EGYPT.resources.power;
   const ethiopiaWaterBefore = state.countries.ETHIOPIA.resources.water;
 
   const use = useSpecialMove(state, 'ETHIOPIA', {});
   assert.ok(use.ok, use.reason);
-  assert.equal(state.countries.EGYPT.resources.water, 0);
-  assert.equal(state.countries.EGYPT.resources.power, 0);
+  // Egypt's this-round production is 1 water / 1 power — only that much should be lost.
+  assert.equal(state.countries.EGYPT.resources.water, egyptWaterBefore - 1);
+  assert.equal(state.countries.EGYPT.resources.power, egyptPowerBefore - 1);
   assert.equal(state.countries.ETHIOPIA.resources.water, ethiopiaWaterBefore + 2);
 
   const stop = useSpecialMove(state, 'EGYPT', {});
