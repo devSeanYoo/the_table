@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "game-server",
+      "runtimeExecutable": "/Users/seanyoo/Downloads/The Table/.tools/node/bin/node",
+      "runtimeArgs": ["server/dev-server.js"],
+      "port": 4000
+    },
+    {
+      "name": "web-client",
+      "runtimeExecutable": "/Users/seanyoo/Downloads/The Table/.tools/node/bin/node",
+      "runtimeArgs": ["client/node_modules/vite/bin/vite.js", "client", "--port", "5173"],
+      "port": 5173
+    }
+  ]
+}

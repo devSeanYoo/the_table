@@ -1,0 +1,14 @@
+{
+  "name": "the-table",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "THE TABLE — serverless deploy (Vercel + Upstash Redis). See README.md.",
+  "scripts": {
+    "dev:api": "node server/dev-server.js",
+    "test": "node server/test/engine.test.mjs"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.34.3"
+  }
+}
