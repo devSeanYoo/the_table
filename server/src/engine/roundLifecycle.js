@@ -259,6 +259,19 @@ export function manualOverride(state, country, patch) {
   if (typeof patch.reinvestCountUsed === 'number') cs.reinvest.countUsed = patch.reinvestCountUsed;
   if (typeof patch.gasUnlocked === 'boolean') cs.gasUnlocked = patch.gasUnlocked;
 
+  // Undoes one Build for the Future bonus for this country/resource — e.g. a team picked
+  // the wrong resource. If it hasn't taken effect yet, drop it from the pending queue;
+  // otherwise it's already folded into permanentBonuses, so remove it from there instead.
+  if (patch.cancelReinvestBonus?.resource) {
+    const resource = patch.cancelReinvestBonus.resource;
+    const pendingIndex = state.pendingReinvestBonuses.findIndex((p) => p.country === country && p.resource === resource);
+    if (pendingIndex !== -1) {
+      state.pendingReinvestBonuses.splice(pendingIndex, 1);
+    } else if (cs.permanentBonuses[resource] > 0) {
+      cs.permanentBonuses[resource] -= 1;
+    }
+  }
+
   addAdminLog(state, 'MANUAL_OVERRIDE', { country, patch });
   return { ok: true };
 }
