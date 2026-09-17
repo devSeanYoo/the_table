@@ -100,6 +100,7 @@ function OverrideForm({ credentials, onActed }) {
   const [country, setCountry] = useState('ETHIOPIA');
   const [fields, setFields] = useState({ oil: '', gas: '', mineral: '', water: '', food: '', power: '', score: '', specialMoveUsesLeft: '', reinvestCountUsed: '' });
   const [gasUnlocked, setGasUnlocked] = useState(null);
+  const [cancelReinvestResource, setCancelReinvestResource] = useState('');
   const [msg, setMsg] = useState(null);
 
   const submit = async (e) => {
@@ -111,10 +112,11 @@ function OverrideForm({ credentials, onActed }) {
     if (fields.specialMoveUsesLeft !== '') patch.specialMoveUsesLeft = Number(fields.specialMoveUsesLeft);
     if (fields.reinvestCountUsed !== '') patch.reinvestCountUsed = Number(fields.reinvestCountUsed);
     if (gasUnlocked !== null) patch.gasUnlocked = gasUnlocked;
+    if (cancelReinvestResource !== '') patch.cancelReinvestBonus = { resource: cancelReinvestResource };
 
     const res = await callAction('admin:override', { country, patch }, credentials);
     setMsg(res.ok ? 'Override applied.' : res.reason);
-    if (res.ok) onActed();
+    if (res.ok) { onActed(); setCancelReinvestResource(''); }
   };
 
   return (
@@ -145,6 +147,12 @@ function OverrideForm({ credentials, onActed }) {
             <option value="">—</option>
             <option value="true">true</option>
             <option value="false">false</option>
+          </select>
+        </label>
+        <label className="small col" style={{ gap: 2 }}>Cancel a Build for the Future bonus
+          <select value={cancelReinvestResource} onChange={(e) => setCancelReinvestResource(e.target.value)}>
+            <option value="">— none —</option>
+            {RESOURCE_KEYS.map((r) => <option key={r} value={r}>{RESOURCE_ICONS[r]} {r}</option>)}
           </select>
         </label>
       </div>

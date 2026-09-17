@@ -6,7 +6,7 @@ import { proposeTrade, acceptTrade } from '../src/engine/trades.js';
 import { useSpecialMove } from '../src/engine/specialMoves.js';
 import { buildForFuture } from '../src/engine/reinvest.js';
 import { applyTrackA } from '../src/engine/scoring.js';
-import { revealEvent, startTimer, nextRound, lockAndScoreRound, lockTradingRound9, submitRound9Choice, revealRound9Results, forceEndRound, tickTimer } from '../src/engine/roundLifecycle.js';
+import { revealEvent, startTimer, nextRound, lockAndScoreRound, lockTradingRound9, submitRound9Choice, revealRound9Results, forceEndRound, tickTimer, manualOverride } from '../src/engine/roundLifecycle.js';
 import { recordSnapshot, listSnapshotRounds, restoreSnapshot } from '../src/engine/timeMachine.js';
 
 let passed = 0;
@@ -234,6 +234,42 @@ test('Build for the Future: cost escalates 1 -> 2 -> 3 and applies next round', 
   const r2 = buildForFuture(state, 'CANADA', 'food');
   assert.ok(r2.ok, r2.reason);
   assert.equal(r2.cost, 2);
+});
+
+test('Manual Override can cancel a wrong Build for the Future bonus, pending or already applied', () => {
+  // Case 1: still pending (next round's Start Timer hasn't run yet) — removed from the queue.
+  const pendingState = freshActiveState();
+  const canada = pendingState.countries.CANADA;
+  canada.resources.mineral = 10;
+  canada.resources.power = 10;
+  buildForFuture(pendingState, 'CANADA', 'food'); // wrong resource, by mistake
+  assert.equal(pendingState.pendingReinvestBonuses.length, 1);
+
+  const cancelPending = manualOverride(pendingState, 'CANADA', { cancelReinvestBonus: { resource: 'food' } });
+  assert.ok(cancelPending.ok, cancelPending.reason);
+  assert.equal(pendingState.pendingReinvestBonuses.length, 0);
+
+  lockAndScoreRound(pendingState);
+  nextRound(pendingState);
+  revealEvent(pendingState);
+  startTimer(pendingState); // round 2 production — the cancelled bonus must not apply
+  assert.equal(canada.permanentBonuses.food, 0);
+
+  // Case 2: already folded into permanentBonuses (a later round has already started) — removed from there.
+  const appliedState = freshActiveState();
+  const canada2 = appliedState.countries.CANADA;
+  canada2.resources.mineral = 10;
+  canada2.resources.power = 10;
+  buildForFuture(appliedState, 'CANADA', 'food');
+  lockAndScoreRound(appliedState);
+  nextRound(appliedState);
+  revealEvent(appliedState);
+  startTimer(appliedState); // round 2 — bonus is now baked into permanentBonuses.food
+  assert.equal(canada2.permanentBonuses.food, 1);
+
+  const cancelApplied = manualOverride(appliedState, 'CANADA', { cancelReinvestBonus: { resource: 'food' } });
+  assert.ok(cancelApplied.ok, cancelApplied.reason);
+  assert.equal(canada2.permanentBonuses.food, 0);
 });
 
 test('Track A: sufficient resources score +3 and consume; insufficient score -3 and keep', () => {
