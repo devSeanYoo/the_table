@@ -63,6 +63,10 @@ When it asks for `ADMIN_PASSWORD`, type the password you'll use to run the game.
 - **New class, fresh game:** in **Round Checkpoints**, go back to Round 1, then give teams new PINs in **Team Access PINs**.
 </details>
 
+## License
+
+[MIT](LICENSE): free to use, change and share in your own classes; keep the copyright notice.
+
 ---
 
 ## For developers
