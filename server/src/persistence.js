@@ -1,7 +1,7 @@
 // Loads/saves the full game (state + round checkpoints) as one JSON blob.
 //
 // Two backends, chosen automatically:
-//   - Redis (Upstash), when UPSTASH_REDIS_REST_URL/UPSTASH_REDIS_REST_TOKEN are set — this
+//   - Redis (Upstash), when its REST URL and token are set (see REDIS_URL below) — this
 //     is what makes the game survive on a serverless host, where nothing written to local
 //     disk survives between requests (each request can run in a fresh container).
 //   - A local JSON file, otherwise — zero setup for local development and testing.
@@ -13,7 +13,11 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-const HAS_REDIS = Boolean(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+// Upstash added from Vercel's Storage tab sets KV_REST_API_URL/KV_REST_API_TOKEN; an Upstash
+// account connected by hand uses the UPSTASH_ names. Either works.
+const REDIS_URL = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+const HAS_REDIS = Boolean(REDIS_URL && REDIS_TOKEN);
 const REDIS_KEY = 'the-table:save';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -24,7 +28,7 @@ let redisClient = null;
 async function getRedis() {
   if (!redisClient) {
     const { Redis } = await import('@upstash/redis');
-    redisClient = Redis.fromEnv();
+    redisClient = new Redis({ url: REDIS_URL, token: REDIS_TOKEN });
   }
   return redisClient;
 }
