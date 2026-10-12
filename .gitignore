@@ -5,3 +5,4 @@ dist/
 server/data/
 .vite/
 .DS_Store
+.claude/

@@ -12,17 +12,17 @@
 
 ## 0. 실행 방법 요약
 
-로컬에서 Node.js가 전역 설치되어 있지 않아, `.tools/node/`에 포터블 버전을 두고 사용합니다.
+실행 방법 전체는 README.md 참고 (Node.js LTS 필요).
 
 ```bash
 # API 서버 (포트 4000) — Vercel 서버리스 함수와 동일한 핸들러 코드를 로컬에서 구동
-"/Users/seanyoo/Downloads/The Table/.tools/node/bin/node" server/dev-server.js
+node server/dev-server.js
 
 # 클라이언트 (포트 5173)
-"/Users/seanyoo/Downloads/The Table/.tools/node/bin/node" client/node_modules/vite/bin/vite.js client --port 5173
+cd client && npm run dev
 ```
 
-브라우저에서 `http://localhost:5173` 접속. 관리자 비밀번호 기본값은 `teacher123`(환경변수 `ADMIN_PASSWORD`로 변경 가능). Vercel + Upstash Redis 배포 방법은 README.md 참고.
+브라우저에서 `http://localhost:5173` 접속. 관리자 비밀번호는 환경변수 `ADMIN_PASSWORD`로 정함(기본값 없음; 로컬 서버는 없으면 임의로 만들어 보여줌). Vercel + Upstash Redis 배포 방법은 README.md 참고.
 
 ---
 
@@ -215,7 +215,7 @@
 ## 12. 알려진 제한 사항
 
 - Vercel + Upstash Redis 배포 방법은 README.md에 정리되어 있으나, 실제 계정 생성·배포는 사용자가 직접 진행해야 함(에이전트가 대신 계정을 만들 수 없음).
-- 배포 시 `ADMIN_PASSWORD` 환경변수를 기본값(`teacher123`)에서 반드시 변경 권장.
+- 배포 시 `ADMIN_PASSWORD` 환경변수를 반드시 설정해야 관리자 로그인이 켜짐(기본값 없음).
 - Upstash 무료 티어에는 요청 수·용량 제한이 있으나(수업 규모의 폴링 트래픽에는 충분), 별도 백업 기능은 없으므로 장기간 중요한 진행 상황은 관리자 화면에서 상태를 캡처해두는 것을 권장.
 - 뉴스피드·거래내역 등은 게임 도중 계속 누적되며 자동으로 정리되지 않음(10라운드 한 세션 기준으로는 용량 문제가 없는 수준).
 - 클라이언트는 2초 주기로 상태를 폴링함 — 실시간 소켓 방식보다 반응 속도가 약간(최대 2초) 느릴 수 있으나, 이 게임의 턴/라운드 성격상 체감상 문제가 되지 않는 것으로 확인.

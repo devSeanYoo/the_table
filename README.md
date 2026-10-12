@@ -6,52 +6,61 @@
 - **클라이언트** (`client/`): React + Vite. 세 가지 화면 — 관리자 / 공용 대시보드 / 개인 페이지. 2초마다 서버 상태를 폴링하고, 타이머는 서버가 보내주는 종료 시각(`endsAt`)을 기준으로 브라우저에서 부드럽게 카운트다운합니다.
 - **저장소**: 배포 환경(Vercel)에서는 **Upstash Redis**에 저장합니다 — 서버리스 함수는 요청이 끝나면 메모리가 사라지므로, 로컬 파일에 의존하면 안 됩니다. 로컬 개발 중에는 Upstash 설정이 없으면 자동으로 `server/data/save.json` 파일에 저장합니다 (`server/src/persistence.js`).
 
-## 로컬 실행 방법
+누구나 내려받아 자기 수업에서 쓸 수 있습니다. 실행 방법은 세 가지입니다: **① 내 컴퓨터 한 대에서**, **② 교실 와이파이로 학생 기기 연결**, **③ 내 Vercel 계정에 올려 온라인으로**.
 
-이 컴퓨터에는 Node.js가 전역 설치되어 있지 않아서, `.tools/node/`에 포터블 Node.js v24 (LTS)를 다운로드해두었습니다 (sudo 불필요, 프로젝트 폴더 안에만 존재).
+## ① 내 컴퓨터에서 실행하기
 
-**Claude Code로 실행 (권장):** 이미 설정된 `.claude/launch.json`을 이용해 Browser 패널에서 "game-server"와 "web-client"를 바로 실행할 수 있습니다.
-
-**터미널에서 직접 실행:**
+준비물: [Node.js](https://nodejs.org) LTS 버전 (설치 후 터미널에서 `node -v`로 확인).
 
 ```bash
-# API 서버 (포트 4000) — Vercel에 올라갈 것과 동일한 핸들러 코드를 그대로 사용합니다
-"/Users/seanyoo/Downloads/The Table/.tools/node/bin/node" server/dev-server.js
+# 1. 내려받기 (또는 GitHub의 Code → Download ZIP 후 압축 풀기)
+git clone https://github.com/devSeanYoo/the_table.git
+cd the_table
 
-# 클라이언트 (포트 5173, 새 터미널)
-"/Users/seanyoo/Downloads/The Table/.tools/node/bin/node" client/node_modules/vite/bin/vite.js client --port 5173
+# 2. 설치 (처음 한 번만)
+npm install
+cd client && npm install && cd ..
+
+# 3. API 서버 실행 (포트 4000)
+node server/dev-server.js
+
+# 4. 새 터미널에서 클라이언트 실행 (포트 5173)
+cd client && npm run dev
 ```
 
 브라우저에서 `http://localhost:5173` 접속.
 
-- 관리자 비밀번호 기본값: `teacher123` (서버 실행 시 `ADMIN_PASSWORD` 환경변수로 변경 가능)
+- **관리자 비밀번호:** 기본값은 없습니다. `ADMIN_PASSWORD` 환경변수로 직접 정하거나(예: `ADMIN_PASSWORD=내비밀번호 node server/dev-server.js`), 정하지 않으면 서버가 실행할 때마다 임의의 비밀번호를 만들어 터미널에 보여줍니다.
 - 라운드 타이머 기본 20분 (`TIMER_SECONDS` 환경변수로 테스트용 단축 가능, 예: `TIMER_SECONDS=30`)
 - 국가별 접속 PIN은 관리자 페이지의 "Team Access PINs" 패널에서 확인·배포·재발급
+- 진행 상황은 `server/data/save.json`에 저장됩니다 (재시작하면 이어짐).
 
-## Vercel에 배포하기 (수업 당일 온라인으로 쓰기)
+## ② 교실 와이파이로 학생 기기 연결하기
+
+인터넷 서비스 가입 없이 교사 노트북을 서버로 써서, 같은 와이파이의 학생 기기들이 접속하게 합니다:
+
+1. 교사 노트북에서 ①의 3단계(API 서버)를 실행합니다.
+2. 노트북의 로컬 IP 확인 (Windows: `ipconfig`, Mac: `ipconfig getifaddr en0`).
+3. `client/.env` 파일 생성: `VITE_API_URL=http://<교사노트북IP>:4000`
+4. 클라이언트를 `cd client && npm run dev -- --host`로 실행해 같은 와이파이의 다른 기기에서 접속 가능하게 합니다.
+5. 학생들은 `http://<교사노트북IP>:5173/play` 로 접속, 팀 국가 선택.
+
+노트북을 끄면 진행이 멈춥니다 (재시작하면 이어짐).
+
+## ③ 내 Vercel 계정에 올려 온라인으로 쓰기 (선택)
+
+학생들이 각자 인터넷으로 접속하게 하려면, 이 저장소를 **자기 GitHub로 Fork**한 뒤 자기 계정에 배포합니다:
 
 1. **Upstash 계정 생성** ([upstash.com](https://upstash.com), 무료) → Redis 데이터베이스 하나 생성 (Region은 아무 곳이나, 무료 티어면 충분합니다). 생성 후 "REST API" 섹션에서 `UPSTASH_REDIS_REST_URL`과 `UPSTASH_REDIS_REST_TOKEN` 두 값을 복사해둡니다.
-2. **Vercel 계정 생성** ([vercel.com](https://vercel.com), 무료) → GitHub 연동 후 이 프로젝트 저장소를 Import 합니다. (아직 GitHub에 올리지 않았다면 먼저 이 폴더를 git 저장소로 만들어 올려야 합니다.)
+2. **Vercel 계정 생성** ([vercel.com](https://vercel.com), 무료) → GitHub 연동 후 Fork한 저장소를 Import 합니다.
 3. Vercel 프로젝트의 **Settings → Environment Variables**에서 아래 세 개를 추가합니다:
    - `UPSTASH_REDIS_REST_URL`
    - `UPSTASH_REDIS_REST_TOKEN`
-   - `ADMIN_PASSWORD` (원하는 관리자 비밀번호로 설정 — 설정하지 않으면 기본값 `teacher123`이 그대로 쓰이니 꼭 바꾸세요)
+   - `ADMIN_PASSWORD` (원하는 관리자 비밀번호. 설정하지 않으면 관리자 로그인이 꺼져 있습니다)
 4. **Deploy** 클릭. 빌드 명령/출력 경로는 `vercel.json`에 이미 설정되어 있어 별도 설정이 필요 없습니다.
-5. 배포가 끝나면 Vercel이 주는 도메인(예: `the-table.vercel.app`)으로 접속. `/admin`, `/dashboard`, `/play`가 모두 같은 도메인에서 동작합니다.
+5. 배포가 끝나면 Vercel이 주는 자기 도메인(예: `<내프로젝트>.vercel.app`)으로 접속. `/admin`, `/dashboard`, `/play`가 모두 같은 도메인에서 동작합니다.
 
-배포 후 게임 진행 중 문제가 생기면, 관리자 페이지의 "Round Checkpoints"에서 라운드 시작 시점으로 되돌릴 수 있습니다 (Upstash에 저장된 상태 기준으로 동작).
-
-## 인터넷 연결이 어려운 경우 — 교실 LAN 대안
-
-Vercel/Upstash 설정 없이 교사 노트북을 서버로 써서 같은 와이파이의 학생 기기들이 접속하게 할 수도 있습니다:
-
-1. 교사 노트북에서 위 "로컬 실행 방법"대로 API 서버(4000)와 클라이언트(5173)를 실행합니다.
-2. 로컬 IP 확인 (`ipconfig getifaddr en0` 등).
-3. `client/.env` 파일 생성: `VITE_API_URL=http://<교사노트북IP>:4000`
-4. 클라이언트를 `--host` 옵션으로 다시 실행해 같은 와이파이의 다른 기기에서 접속 가능하게 함.
-5. 학생들은 `http://<교사노트북IP>:5173/play` 로 접속, 팀 국가 선택.
-
-이 경우 상태는 교사 노트북의 `server/data/save.json`에 저장되며, 노트북을 끄면 진행이 멈춥니다 (재시작하면 이어짐).
+게임 진행 중 문제가 생기면, 관리자 페이지의 "Round Checkpoints"에서 라운드 시작 시점으로 되돌릴 수 있습니다.
 
 ## 화면 구조
 
@@ -77,7 +86,7 @@ Vercel/Upstash 설정 없이 교사 노트북을 서버로 써서 같은 와이�
 `server/test/engine.test.mjs`에 게임 로직 유닛 테스트 28개 포함 (거래 규칙, 패시브, 모든 Special Move, 재투자, 트랙A 채점, 라운드 4/6/9/10 특수 처리, 되돌리기 기능 등). 실행:
 
 ```bash
-"/Users/seanyoo/Downloads/The Table/.tools/node/bin/node" server/test/engine.test.mjs
+node server/test/engine.test.mjs
 ```
 
 브라우저로 전체 흐름(관리자 로그인 → 라운드 진행 → 국가 페이지 거래 → 대시보드 확인 → 체크포인트 복원)을 서버리스 API(로컬 파일 백엔드) 기준으로 직접 확인 완료. 최종 구현 상세(정보 은닉 정책, 라운드 9·10 흐름 변경 등)는 `THE_TABLE_개발스펙.md` 참고.

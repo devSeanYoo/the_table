@@ -5,11 +5,18 @@
 // Usage: node server/dev-server.js  (defaults to port 4000, override with PORT env var)
 
 import http from 'http';
+import { randomBytes } from 'crypto';
 import { handleStateRequest } from './src/handlers/stateHandler.js';
 import { handleActionRequest } from './src/handlers/actionHandler.js';
 import { backendName } from './src/persistence.js';
 
 const PORT = process.env.PORT || 4000;
+
+// No default admin password: if none is set, make a random one for this run and print it.
+if (!process.env.ADMIN_PASSWORD) {
+  process.env.ADMIN_PASSWORD = randomBytes(6).toString('base64url');
+  console.log('ADMIN_PASSWORD not set, so a random one was made for this run (set ADMIN_PASSWORD to choose your own).');
+}
 
 function withCors(res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -70,5 +77,5 @@ const server = http.createServer(async (req, res) => {
 server.listen(PORT, () => {
   console.log(`THE TABLE dev API server listening on http://localhost:${PORT}`);
   console.log(`Persistence backend: ${backendName()}`);
-  console.log(`Admin password: ${process.env.ADMIN_PASSWORD || 'teacher123'}`);
+  console.log(`Admin password: ${process.env.ADMIN_PASSWORD}`);
 });

@@ -1,13 +1,20 @@
 import { COUNTRY_CODES } from './data/countries.js';
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'teacher123';
+// No built-in default: whoever runs the game sets ADMIN_PASSWORD (the local dev server
+// generates a random one at startup if it's missing). Read on every call so the dev
+// server can set it after this module loads.
+function adminPassword() {
+  return process.env.ADMIN_PASSWORD || '';
+}
 
 // Every request carries its own credentials (there's no persistent connection to
 // remember "who you are" between requests, unlike the old Socket.IO version) — so this
 // runs on every single state fetch and action.
 export function checkAuth(state, { role, password, country, pin }) {
   if (role === 'admin') {
-    if (password !== ADMIN_PASSWORD) return { ok: false, reason: 'Wrong password.' };
+    const expected = adminPassword();
+    if (!expected) return { ok: false, reason: 'Admin login is off: set ADMIN_PASSWORD on the server.' };
+    if (password !== expected) return { ok: false, reason: 'Wrong password.' };
     return { ok: true, role: 'admin' };
   }
   if (role === 'dashboard') {
